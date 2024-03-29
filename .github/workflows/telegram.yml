@@ -1,0 +1,61 @@
+name: Telegram Notification
+on: [push]
+jobs:
+  notify:
+    name: Send Telegram Message
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Setup emoji
+        id: emoji
+        run: |
+          echo "::set-output name=emoji::$(echo '🚀 🎉 👍 😃 👽 👀 💻 📢 🫕 🎈 🤖 🎊 🌟 😎' | tr ' ' '\n' | shuf -n 1)"
+
+      - name: Determine Day of Week
+        id: day_of_week
+        run: |
+          echo "::set-output name=day::$(date +%A)"
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        id: extract_branch
+
+      - name: Fetch Motivational Quote
+        id: motivational_quote
+        run: |
+          # Fetch a random quote
+          RESPONSE=$(curl -s "https://api.quotable.io/random")
+
+          # Extract the quote text
+          QUOTE=$(echo "$RESPONSE" | jq -r '.content')
+
+          echo "QUOTE=$QUOTE" >> $GITHUB_ENV
+      - name: Send Message
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ${{ steps.emoji.outputs.emoji }} *New Commit on ${{ steps.extract_branch.outputs.branch }}!* ${{ steps.emoji.outputs.emoji }}
+
+            📚 *Repository:*
+            ${{ github.repository }}
+
+            🖊️ *Commit Author:*
+            ${{ github.actor }}
+
+            📝 *Commit Message:*
+            ${{ github.event.commits[0].message }}
+
+            🔗 [See Commit Here](https://github.com/${{ github.repository }}/commit/${{github.sha}})
+
+            🌿 *Branch:*
+            ${{ steps.extract_branch.outputs.branch }}
+
+            Happy Coding! Have a great ${{ steps.day_of_week.outputs.day }}! 🎉
+
+            🌟 *Quote of the day:*
+            ${{ env.QUOTE }}
+          format: Markdown
