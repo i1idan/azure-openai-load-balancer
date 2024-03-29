@@ -3,7 +3,7 @@ pytest==7.4.3
 pytest-mock==3.12.0
 tenacity==8.2.3
 python-dotenv==1.0.0
-fastapi
-uvicorn
+fastapi==0.109.0
+uvicorn==0.27.0
 openai[datalib]
 pandas
